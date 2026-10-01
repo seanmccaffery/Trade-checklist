@@ -1,0 +1,38 @@
+<svg width="512" height="512" viewBox="0 0 380 380" xmlns="http://www.w3.org/2000/svg">
+<style>
+  .bg { fill: #1a1a1a; }
+  .panel { fill: #2a2a2a; stroke: #444; stroke-width: 3; }
+  .switch-on { fill: #1a3a2a; stroke: #4a9; stroke-width: 1.5; }
+  .lever-on { fill: #4a9; }
+  .bulb-glass { fill: #2ecc71; }
+  .bulb-base { fill: #555; }
+  .bulb-base-dark { fill: #444; }
+  .bulb-glow { fill: #2ecc71; opacity: 0.15; }
+  .filament { stroke: #ccffcc; stroke-width: 2; fill: none; }
+  .dot-on { fill: #4f9; }
+</style>
+<rect width="380" height="380" rx="60" class="bg"/>
+<rect x="30" y="30" width="320" height="320" rx="24" class="panel"/>
+<circle cx="190" cy="105" r="52" class="bulb-glow"/>
+<ellipse cx="190" cy="102" rx="38" ry="40" class="bulb-glass"/>
+<ellipse cx="180" cy="88" rx="11" ry="14" fill="rgba(255,255,255,0.2)"/>
+<path d="M176 138 Q179 120 190 113 Q201 120 204 138" class="filament"/>
+<path d="M183 128 Q190 117 197 128" class="filament"/>
+<rect x="171" y="138" width="38" height="8" rx="2" class="bulb-base"/>
+<rect x="174" y="146" width="32" height="7" rx="1" class="bulb-base-dark"/>
+<rect x="177" y="153" width="26" height="7" rx="1" class="bulb-base"/>
+<rect x="180" y="160" width="20" height="7" rx="1" class="bulb-base-dark"/>
+<rect x="55" y="195" width="60" height="90" rx="8" class="switch-on"/>
+<circle cx="85" cy="208" r="5" class="dot-on"/>
+<rect x="63" y="228" width="44" height="22" rx="3" class="lever-on"/>
+<rect x="130" y="195" width="60" height="90" rx="8" class="switch-on"/>
+<circle cx="160" cy="208" r="5" class="dot-on"/>
+<rect x="138" y="228" width="44" height="22" rx="3" class="lever-on"/>
+<rect x="205" y="195" width="60" height="90" rx="8" class="switch-on"/>
+<circle cx="235" cy="208" r="5" class="dot-on"/>
+<rect x="213" y="228" width="44" height="22" rx="3" class="lever-on"/>
+<rect x="280" y="195" width="60" height="90" rx="8" class="switch-on"/>
+<circle cx="310" cy="208" r="5" class="dot-on"/>
+<rect x="288" y="228" width="44" height="22" rx="3" class="lever-on"/>
+<text x="190" y="318" text-anchor="middle" font-family="Courier New, monospace" font-size="18" letter-spacing="4" fill="#4a9">TRADE</text>
+</svg>
