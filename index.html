@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trade Checklist</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #1a1a1a;
+    font-family: 'Courier New', monospace;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+  }
+
+  .panel {
+    background: #2a2a2a;
+    border: 3px solid #444;
+    border-radius: 12px;
+    padding: 2rem;
+    width: 100%;
+    max-width: 560px;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+  }
+
+  .panel-title {
+    text-align: center;
+    color: #888;
+    font-size: 11px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid #333;
+    padding-bottom: 1rem;
+  }
+
+  .switches {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .switch-unit {
+    background: #222;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    user-select: none;
+    transition: border-color 0.2s;
+  }
+
+  .switch-unit:hover { border-color: #555; }
+  .switch-unit.active { border-color: #4a9; }
+
+  .switch-label {
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #666;
+    text-align: center;
+    line-height: 1.4;
+    transition: color 0.2s;
+  }
+
+  .switch-unit.active .switch-label { color: #4a9; }
+
+  .toggle {
+    width: 36px;
+    height: 64px;
+    background: #333;
+    border-radius: 4px;
+    border: 2px solid #444;
+    position: relative;
+    transition: background 0.2s;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
+  }
+
+  .switch-unit.active .toggle {
+    background: #1a3a2a;
+    border-color: #4a9;
+  }
+
+  .toggle-lever {
+    width: 28px;
+    height: 26px;
+    background: linear-gradient(180deg, #777 0%, #555 100%);
+    border-radius: 3px;
+    position: absolute;
+    left: 2px;
+    bottom: 4px;
+    transition: bottom 0.15s cubic-bezier(0.4, 0, 0.2, 1), background 0.2s;
+    border: 1px solid #666;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+  }
+
+  .switch-unit.active .toggle-lever {
+    bottom: 34px;
+    background: linear-gradient(180deg, #6cf 0%, #4a9 100%);
+    border-color: #4a9;
+  }
+
+  .toggle-indicator {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #444;
+    position: absolute;
+    top: 5px;
+    left: 50%;
+    transform: translateX(-50%);
+    transition: background 0.2s, box-shadow 0.2s;
+  }
+
+  .switch-unit.active .toggle-indicator {
+    background: #4f9;
+    box-shadow: 0 0 6px #4f9;
+  }
+
+  .bulb-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
