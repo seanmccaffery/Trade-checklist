@@ -132,3 +132,192 @@
     align-items: center;
     gap: 0.5rem;
   }
+
+  .bulb-wrap {
+    position: relative;
+    width: 80px;
+    height: 100px;
+  }
+
+  .bulb-glow {
+    position: absolute;
+    inset: -20px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,220,50,0.3) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.4s;
+    pointer-events: none;
+  }
+
+  .bulb-svg { width: 80px; height: 100px; }
+
+  .bulb-glass {
+    fill: #333;
+    transition: fill 0.4s;
+  }
+
+  .bulb-wrap.s1 .bulb-glass { fill: #c0392b; }
+  .bulb-wrap.s2 .bulb-glass { fill: #e67e22; }
+  .bulb-wrap.s3 .bulb-glass { fill: #7dba5a; }
+  .bulb-wrap.lit .bulb-glass { fill: #2ecc71; }
+
+  .bulb-shine {
+    fill: rgba(255,255,255,0.08);
+    transition: fill 0.4s;
+  }
+
+  .bulb-wrap.s1 .bulb-shine,
+  .bulb-wrap.s2 .bulb-shine,
+  .bulb-wrap.s3 .bulb-shine,
+  .bulb-wrap.lit .bulb-shine { fill: rgba(255,255,255,0.25); }
+
+  .bulb-base { fill: #555; }
+  .bulb-base-dark { fill: #444; }
+
+  .bulb-filament {
+    stroke: #555;
+    stroke-width: 1.5;
+    fill: none;
+    transition: stroke 0.4s;
+  }
+
+  .bulb-wrap.s1 .bulb-filament { stroke: #ffaaaa; }
+  .bulb-wrap.s2 .bulb-filament { stroke: #ffe0aa; }
+  .bulb-wrap.s3 .bulb-filament { stroke: #ccffcc; }
+  .bulb-wrap.lit .bulb-filament { stroke: #ccffcc; }
+
+  .bulb-wrap.s1 .bulb-glow { opacity: 0.6; background: radial-gradient(circle, rgba(200,50,50,0.35) 0%, transparent 70%); }
+  .bulb-wrap.s2 .bulb-glow { opacity: 0.6; background: radial-gradient(circle, rgba(220,140,30,0.35) 0%, transparent 70%); }
+  .bulb-wrap.s3 .bulb-glow { opacity: 0.6; background: radial-gradient(circle, rgba(80,180,80,0.25) 0%, transparent 70%); }
+  .bulb-wrap.lit .bulb-glow { opacity: 1; background: radial-gradient(circle, rgba(46,204,113,0.4) 0%, transparent 70%); }
+
+  .bulb-status {
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #444;
+    transition: color 0.4s;
+  }
+
+  .score {
+    font-size: 11px;
+    color: #555;
+    letter-spacing: 2px;
+    margin-top: 0.25rem;
+  }
+
+  .reset-btn {
+    margin-top: 1.5rem;
+    width: 100%;
+    padding: 0.6rem;
+    background: transparent;
+    border: 1px solid #333;
+    border-radius: 4px;
+    color: #555;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+  }
+
+  .reset-btn:hover { border-color: #666; color: #888; }
+</style>
+</head>
+<body>
+<div class="panel">
+  <div class="panel-title">Pre-Trade Checklist</div>
+
+  <div class="switches" id="switches">
+    <div class="switch-unit" data-index="0" onclick="toggle(0)">
+      <div class="switch-label">Cloud line<br>present</div>
+      <div class="toggle">
+        <div class="toggle-indicator"></div>
+        <div class="toggle-lever"></div>
+      </div>
+    </div>
+    <div class="switch-unit" data-index="1" onclick="toggle(1)">
+      <div class="switch-label">OB box<br>aligned</div>
+      <div class="toggle">
+        <div class="toggle-indicator"></div>
+        <div class="toggle-lever"></div>
+      </div>
+    </div>
+    <div class="switch-unit" data-index="2" onclick="toggle(2)">
+      <div class="switch-label">ES respecting<br>levels</div>
+      <div class="toggle">
+        <div class="toggle-indicator"></div>
+        <div class="toggle-lever"></div>
+      </div>
+    </div>
+    <div class="switch-unit" data-index="3" onclick="toggle(3)">
+      <div class="switch-label">Not in<br>recovery mode</div>
+      <div class="toggle">
+        <div class="toggle-indicator"></div>
+        <div class="toggle-lever"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bulb-section">
+    <div class="bulb-wrap" id="bulb">
+      <div class="bulb-glow"></div>
+      <svg class="bulb-svg" viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="40" cy="38" rx="26" ry="28" class="bulb-glass"/>
+        <ellipse cx="33" cy="28" rx="8" ry="11" class="bulb-shine"/>
+        <rect x="28" y="62" width="24" height="6" rx="2" class="bulb-base"/>
+        <rect x="30" y="68" width="20" height="5" rx="1" class="bulb-base-dark"/>
+        <rect x="32" y="73" width="16" height="5" rx="1" class="bulb-base"/>
+        <rect x="34" y="78" width="12" height="5" rx="1" class="bulb-base-dark"/>
+        <path d="M34 62 Q36 50 40 44 Q44 50 46 62" class="bulb-filament"/>
+        <path d="M37 55 Q40 48 43 55" class="bulb-filament"/>
+      </svg>
+    </div>
+    <div class="bulb-status" id="status">Stand by</div>
+    <div class="score" id="score">0 / 4</div>
+  </div>
+
+  <button class="reset-btn" onclick="resetAll()">Reset</button>
+</div>
+
+<script>
+  const state = [false, false, false, false];
+
+  function toggle(i) {
+    state[i] = !state[i];
+    const units = document.querySelectorAll('.switch-unit');
+    units[i].classList.toggle('active', state[i]);
+    update();
+  }
+
+  function update() {
+    const count = state.filter(Boolean).length;
+    const bulb = document.getElementById('bulb');
+    const status = document.getElementById('status');
+    const score = document.getElementById('score');
+    bulb.classList.remove('s1', 's2', 's3', 'lit');
+    if (count === 1) bulb.classList.add('s1');
+    else if (count === 2) bulb.classList.add('s2');
+    else if (count === 3) bulb.classList.add('s3');
+    else if (count === 4) bulb.classList.add('lit');
+    score.textContent = count + ' / 4';
+    const states = [
+      { text: 'Stand by',       color: '#444' },
+      { text: 'Not yet',        color: '#c0392b' },
+      { text: 'Getting closer', color: '#e67e22' },
+      { text: 'Almost there',   color: '#7dba5a' },
+      { text: 'Trade ready',    color: '#2ecc71' },
+    ];
+    status.textContent = states[count].text;
+    status.style.color = states[count].color;
+  }
+
+  function resetAll() {
+    for (let i = 0; i < 4; i++) state[i] = false;
+    document.querySelectorAll('.switch-unit').forEach(u => u.classList.remove('active'));
+    update();
+  }
+</script>
+</body>
+</html>
