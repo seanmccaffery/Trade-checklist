@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Trade Checklist</title>
+<style>
+  :root {
+    --green: #2ecc71; --green-dim: #4a9; --green-dark: #1a3a2a;
+    --red: #e74c3c; --red-dark: #3a1a1a;
+    --amber: #f0a500; --amber-dark: #3a2a00;
+    --bg: #1a1a1a; --panel: #252525; --panel-inner: #1e1e1e;
+    --border: #3a3a3a; --border-dim: #2e2e2e;
+    --text-dim: #4a4a4a; --text-muted: #606060;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; background: var(--bg); font-family: 'Courier New', monospace; }
+  body { display: flex; align-items: center; justify-content: center; padding: 0.6rem; }
+
+  .panel {
+    background: var(--panel);
+    border: 2px solid var(--border);
+    border-radius: 14px;
+    padding: 0.8rem;
+    width: 100%;
+    max-width: 380px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.6), 0 4px 20px rgba(0,0,0,0.5);
+  }
+
+  /* ── STATUS LED STRIP ── */
+  .status-strip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.35rem 0.6rem;
+    background: var(--panel-inner);
+    border: 1px solid var(--border-dim);
+    border-radius: 6px;
+  }
+
+  .strip-title {
+    font-size: 8px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  .led-group { display: flex; align-items: center; gap: 0.5rem; }
+
+  .led {
+    display: flex; align-items: center; gap: 0.3rem;
+    font-size: 8px; letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .led-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: #2a2a2a;
+    border: 1px solid #333;
+    transition: background 0.3s, box-shadow 0.3s;
+  }
+
+  .led-label { color: var(--text-dim); transition: color 0.3s; }
+
+  .led.active-green .led-dot { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .led.active-green .led-label { color: var(--green); }
+  .led.active-red .led-dot { background: var(--red); box-shadow: 0 0 6px var(--red); }
+  .led.active-red .led-label { color: var(--red); }
+  .led.active-amber .led-dot { background: var(--amber); box-shadow: 0 0 6px var(--amber); }
+  .led.active-amber .led-label { color: var(--amber); }
+
+  /* ── CHECKLIST SWITCHES ── */
+  .switches {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem;
+  }
+
+  .switch-unit {
+    background: var(--panel-inner);
+    border: 1px solid var(--border-dim);
+    border-radius: 8px;
+    padding: 0.65rem 0.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    user-select: none;
+    transition: border-color 0.2s, opacity 0.3s;
+  }
+
+  .switch-unit:hover { border-color: #555; }
+  .switch-unit.active { border-color: var(--green-dim); background: #1c2e22; }
+  .switch-unit.disabled { opacity: 0.25; pointer-events: none; }
+
+  .switch-label {
+    font-size: 9px; letter-spacing: 0.5px;
+    text-transform: uppercase; color: var(--text-muted);
+    text-align: center; line-height: 1.5;
+    transition: color 0.2s;
+  }
+
+  .switch-unit.active .switch-label { color: var(--green-dim); }
+
+  .toggle {
+    width: 32px; height: 58px;
+    background: #2a2a2a; border-radius: 5px;
+    border: 2px solid #3a3a3a; position: relative;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.6);
+    transition: background 0.2s, border-color 0.2s;
+    flex-shrink: 0;
+  }
+
+  .switch-unit.active .toggle { background: var(--green-dark); border-color: var(--green-dim); }
+
+  .toggle-lever {
+    width: 24px; height: 22px;
+    background: linear-gradient(180deg, #888 0%, #555 100%);
+    border-radius: 3px; position: absolute;
+    left: 2px; bottom: 3px;
+    transition: bottom 0.15s cubic-bezier(0.4,0,0.2,1), background 0.2s;
+    border: 1px solid #666;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+  }
+
+  .switch-unit.active .toggle-lever {
+    bottom: 30px;
+    background: linear-gradient(180deg, #7ef 0%, var(--green-dim) 100%);
+    border-color: var(--green-dim);
+  }
+
+  .toggle-indicator {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: #333; position: absolute;
+    top: 4px; left: 50%; transform: translateX(-50%);
+    transition: background 0.2s, box-shadow 0.2s;
+  }
+
+  .switch-unit.active .toggle-indicator { background: #4f9; box-shadow: 0 0 5px #4f9; }
+
+  /* ── BULB SECTION ── */
+  .bulb-section {
+    display: flex; flex-direction: column;
+    align-items: center; gap: 0.3rem;
+    padding: 0.5rem 0;
+  }
+
+  .bulb-wrap { position: relative; width: 70px; height: 88px; flex-shrink: 0; }
+
+  .bulb-glow {
+    position: absolute; inset: -16px; border-radius: 50%;
+    opacity: 0; transition: opacity 0.4s; pointer-events: none;
+  }
+
+  .bulb-svg { width: 70px; height: 88px; }
+
+  .bulb-glass { fill: #2a2a2a; transition: fill 0.4s; }
+  .bulb-wrap.s1 .bulb-glass { fill: #c0392b; }
+  .bulb-wrap.s2 .bulb-glass { fill: #e67e22; }
+  .bulb-wrap.s3 .bulb-glass { fill: #7dba5a; }
+  .bulb-wrap.lit .bulb-glass { fill: var(--green); }
+  .bulb-shine { fill: rgba(255,255,255,0.05); transition: fill 0.4s; }
+  .bulb-wrap.s1 .bulb-shine, .bulb-wrap.s2 .bulb-shine,
+  .bulb-wrap.s3 .bulb-shine, .bulb-wrap.lit .bulb-shine { fill: rgba(255,255,255,0.2); }
+  .bulb-base { fill: #555; } .bulb-base-dark { fill: #444; }
+  .bulb-filament { stroke: #444; stroke-width: 1.5; fill: none; transition: stroke 0.4s; }
+  .bulb-wrap.s1 .bulb-filament { stroke: #ffaaaa; }
+  .bulb-wrap.s2 .bulb-filament { stroke: #ffe0aa; }
+  .bulb-wrap.s3 .bulb-filament { stroke: #ccffcc; }
+  .bulb-wrap.lit .bulb-filament { stroke: #ccffcc; }
+  .bulb-wrap.s1 .bulb-glow { opacity:.5; background:radial-gradient(circle,rgba(200,50,50,.3) 0%,transparent 70%); }
+  .bulb-wrap.s2 .bulb-glow { opacity:.5; background:radial-gradient(circle,rgba(220,140,30,.3) 0%,transparent 70%); }
+  .bulb-wrap.s3 .bulb-glow { opacity:.5; background:radial-gradient(circle,rgba(80,180,80,.2) 0%,transparent 70%); }
+  .bulb-wrap.lit .bulb-glow { opacity:1; background:radial-gradient(circle,rgba(46,204,113,.35) 0%,transparent 70%); }
+
+  /* Fixed height container so text change never shifts layout */
+  .bulb-status-wrap {
+    height: 36px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 0.15rem;
+  }
+
+  .bulb-status { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: #444; transition: color 0.3s; }
+  .score { font-size: 10px; color: var(--text-dim); letter-spacing: 2px; }
+
+  /* ── DIVIDER ── */
+  .divider { border: none; border-top: 1px solid var(--border-dim); }
+
+  /* ── SECONDARY SECTION ── */
+  .secondary {
+    display: flex; gap: 0.6rem; align-items: center;
+  }
+
+  /* Strikes */
+  .strikes-wrap {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; gap: 0.4rem;
+    background: var(--panel-inner);
+    border: 1px solid var(--border-dim);
+    border-radius: 7px;
+    padding: 0.5rem 0.8rem;
+  }
+
+  .secondary-label { font-size: 8px; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text-muted); text-align: center; line-height: 1.5; }
+
+  .strikes-row { display: flex; justify-content: center; gap: 0.8rem; }
+
+  .strike-unit {
+    display: flex; flex-direction: column; align-items: center; gap: 0.3rem;
+    cursor: pointer; user-select: none; opacity: 0.7;
+    transition: opacity 0.2s;
+  }
+
+  .strike-unit.active { opacity: 1; }
+
+  .strike-toggle {
+    width: 24px; height: 42px; background: #222;
+    border-radius: 4px; border: 1px solid #333; position: relative;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
+    transition: background 0.2s, border-color 0.2s;
+  }
+
+  .strike-unit.active .strike-toggle { background: var(--red-dark); border-color: var(--red); }
+
+  .strike-lever {
+    width: 17px; height: 15px;
+    background: linear-gradient(180deg, #555 0%, #333 100%);
+    border-radius: 2px; position: absolute; left: 2px; bottom: 2px;
+    transition: bottom 0.15s cubic-bezier(0.4,0,0.2,1), background 0.2s;
+  }
+
+  .strike-unit.active .strike-lever {
+    bottom: 22px;
+    background: linear-gradient(180deg, #f88 0%, var(--red) 100%);
+  }
+
+  .strike-dot {
+    width: 4px; height: 4px; border-radius: 50%; background: #2a2a2a;
+    position: absolute; top: 3px; left: 50%; transform: translateX(-50%);
+    transition: background 0.2s, box-shadow 0.2s;
+  }
+
+  .strike-unit.active .strike-dot { background: #f55; box-shadow: 0 0 4px #f55; }
+  .strike-label { font-size: 7px; letter-spacing: 0.5px; color: var(--text-dim); text-transform: uppercase; transition: color 0.2s; }
+  .strike-unit.active .strike-label { color: var(--red); }
+
+  /* Done for the day */
+  .done-wrap { flex: 1; display: flex; flex-direction: column; gap: 0.4rem; align-items: center; width: 100%; }
+
+  .done-unit {
+    display: flex; flex-direction: column; align-items: center; gap: 0.4rem;
+    cursor: pointer; user-select: none; opacity: 0.7;
+    background: var(--panel-inner); border: 1px solid var(--border-dim);
+    border-radius: 7px; padding: 0.5rem 0.8rem;
+    transition: border-color 0.2s, opacity 0.3s;
+    width: 100%;
+  }
+
+  .done-unit:hover { border-color: #555; }
+  .done-unit.active { border-color: var(--amber); background: #201800; opacity: 1; }
+  .done-unit.disabled { pointer-events: none; opacity: 0.25; }
+
+  .done-label { font-size: 8px; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text-muted); text-align: center; line-height: 1.5; transition: color 0.2s; }
+  .done-unit.active .done-label { color: var(--amber); }
+
+  .done-toggle {
+    width: 28px; height: 50px; background: #2a2a2a;
+    border-radius: 4px; border: 1px solid #3a3a3a; position: relative;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
+    transition: background 0.2s, border-color 0.2s;
+  }
+
+  .done-unit.active .done-toggle { background: var(--amber-dark); border-color: var(--amber); }
+
+  .done-lever {
+    width: 20px; height: 19px;
+    background: linear-gradient(180deg, #777 0%, #555 100%);
+    border-radius: 3px; position: absolute; left: 2px; bottom: 3px;
+    transition: bottom 0.15s cubic-bezier(0.4,0,0.2,1), background 0.2s;
+  }
+
+  .done-unit.active .done-lever {
+    bottom: 26px;
+    background: linear-gradient(180deg, #ffd060 0%, var(--amber) 100%);
+  }
+
+  .done-dot {
+    width: 5px; height: 5px; border-radius: 50%; background: #333;
+    position: absolute; top: 4px; left: 50%; transform: translateX(-50%);
+    transition: background 0.2s, box-shadow 0.2s;
+  }
+
+  .done-unit.active .done-dot { background: #ffc; box-shadow: 0 0 5px #ffc; }
+
+  /* ── RESET ROW ── */
+  .reset-row { display: flex; gap: 0.5rem; align-items: stretch; }
+
+  .checklist-reset-btn {
+    flex: 1;
+    background: transparent; border: 1px solid var(--border-dim);
+    border-radius: 5px; color: var(--text-dim);
+    font-family: 'Courier New', monospace; font-size: 8px;
+    letter-spacing: 2px; text-transform: uppercase;
+    cursor: pointer; transition: border-color 0.2s, color 0.2s;
+    display: flex; align-items: center; justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+    appearance: none; -webkit-appearance: none;
+  }
+
+  .checklist-reset-btn:hover { border-color: #555; color: #888; }
+  .checklist-reset-btn:focus,
+  .checklist-reset-btn:focus-visible,
+  .checklist-reset-btn:active { outline: none; border-color: var(--border-dim); color: var(--text-dim); background: transparent; }
+
+  /* Master reset — hold to confirm */
+  .master-btn-wrap { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 0.2rem; }
+  .master-btn-label { font-size: 7px; letter-spacing: 1px; text-transform: uppercase; color: var(--text-dim); }
+
+  .master-btn {
+    width: 72px; height: 36px;
+    background: #1a1a1a; border: 1px solid #333;
+    border-radius: 5px; color: #444;
+    font-family: 'Courier New', monospace; font-size: 7px;
+    letter-spacing: 1px; text-transform: uppercase;
+    cursor: pointer; user-select: none;
+    position: relative; overflow: hidden;
+    transition: border-color 0.2s, color 0.2s;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .master-btn-fill {
+    position: absolute; left: 0; top: 0; bottom: 0;
+    width: 0%; background: var(--red-dark);
+    transition: none; border-radius: 4px;
+  }
+
+  .master-btn-text { position: relative; z-index: 1; }
+
+  .master-btn.holding { border-color: var(--red); color: var(--red); }
+  .master-btn.holding .master-btn-fill { background: #5a0a0a; }
+</style>
+</head>
+<body>
+<div class="panel">
+
+  <!-- STATUS LED STRIP -->
+  <div class="status-strip">
+    <div class="strip-title">Status</div>
+    <div class="led-group">
+      <div class="led" id="ledNormal">
+        <div class="led-dot"></div>
+        <span class="led-label">Ready</span>
+      </div>
+      <div class="led" id="ledLocked">
+        <div class="led-dot"></div>
+        <span class="led-label">Locked</span>
+      </div>
+      <div class="led" id="ledDone">
+        <div class="led-dot"></div>
+        <span class="led-label">Done</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHECKLIST SWITCHES -->
+  <div class="switches" id="switches">
+    <div class="switch-unit" onclick="toggle(0)">
+      <div class="switch-label">Cloud line<br>present</div>
+      <div class="toggle"><div class="toggle-indicator"></div><div class="toggle-lever"></div></div>
+    </div>
+    <div class="switch-unit" onclick="toggle(1)">
+      <div class="switch-label">OB box<br>aligned</div>
+      <div class="toggle"><div class="toggle-indicator"></div><div class="toggle-lever"></div></div>
+    </div>
+    <div class="switch-unit" onclick="toggle(2)">
+      <div class="switch-label">ES respecting<br>levels</div>
+      <div class="toggle"><div class="toggle-indicator"></div><div class="toggle-lever"></div></div>
+    </div>
+    <div class="switch-unit" onclick="toggle(3)">
+      <div class="switch-label">Not in<br>recovery mode</div>
+      <div class="toggle"><div class="toggle-indicator"></div><div class="toggle-lever"></div></div>
+    </div>
+  </div>
+
+  <!-- BULB -->
+  <div class="bulb-section">
+    <div class="bulb-wrap" id="bulb">
+      <div class="bulb-glow"></div>
+      <svg class="bulb-svg" viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="40" cy="38" rx="26" ry="28" class="bulb-glass"/>
+        <ellipse cx="33" cy="28" rx="8" ry="11" class="bulb-shine"/>
+        <rect x="28" y="62" width="24" height="6" rx="2" class="bulb-base"/>
+        <rect x="30" y="68" width="20" height="5" rx="1" class="bulb-base-dark"/>
+        <rect x="32" y="73" width="16" height="5" rx="1" class="bulb-base"/>
+        <rect x="34" y="78" width="12" height="5" rx="1" class="bulb-base-dark"/>
+        <path d="M34 62 Q36 50 40 44 Q44 50 46 62" class="bulb-filament"/>
+        <path d="M37 55 Q40 48 43 55" class="bulb-filament"/>
+      </svg>
+    </div>
+    <div class="bulb-status-wrap">
+      <div class="bulb-status" id="bulbStatus">Stand by</div>
+      <div class="score" id="score">0 / 4</div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECONDARY: STRIKES + DONE -->
+  <div class="secondary">
+    <div class="strikes-wrap">
+      <div class="secondary-label">Rule breaks</div>
+      <div class="strikes-row" style="margin-top:0.2rem">
+        <div class="strike-unit" id="strike0" onclick="flipStrike(0)">
+          <div class="strike-toggle"><div class="strike-dot"></div><div class="strike-lever"></div></div>
+          <div class="strike-label">S1</div>
+        </div>
+        <div class="strike-unit" id="strike1" onclick="flipStrike(1)">
+          <div class="strike-toggle"><div class="strike-dot"></div><div class="strike-lever"></div></div>
+          <div class="strike-label">S2</div>
+        </div>
+        <div class="strike-unit" id="strike2" onclick="flipStrike(2)">
+          <div class="strike-toggle"><div class="strike-dot"></div><div class="strike-lever"></div></div>
+          <div class="strike-label">S3</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="done-wrap">
+      <div class="done-unit" id="doneUnit" onclick="flipDone()">
+        <div class="done-label">Done for<br>the day</div>
+        <div class="done-toggle"><div class="done-dot"></div><div class="done-lever"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- RESET ROW -->
+  <div class="reset-row">
+    <button class="checklist-reset-btn" onclick="resetChecklist()">↺ Reset conditions</button>
+    <div class="master-btn-wrap">
+      <div class="master-btn-label">Master reset</div>
+      <div class="master-btn" id="masterBtn"
+        onmousedown="startHold()" onmouseup="endHold()" onmouseleave="endHold()"
+        ontouchstart="startHold(event)" ontouchend="endHold()" ontouchcancel="endHold()">
+        <div class="master-btn-fill" id="masterFill"></div>
+        <span class="master-btn-text" id="masterText">Hold</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const STRIKE_LOCKOUT_MS = 4 * 60 * 60 * 1000;
+  const HOLD_MS = 2000;
+
+  const checkState = [false,false,false,false];
+  const strikeState = [false,false,false];
+  let lockoutUntil = null;
+  let doneUntil = null;
+  let doneActive = false;
+  let holdTimer = null;
+  let holdStart = null;
+  let holdRaf = null;
+
+  function save() {
+    try { localStorage.setItem('tc3', JSON.stringify({checkState,strikeState,lockoutUntil,doneUntil,doneActive})); } catch(e){}
+  }
+
+  function load() {
+    try {
+      const d = JSON.parse(localStorage.getItem('tc3'));
+      if (!d) return;
+      d.checkState.forEach((v,i) => checkState[i]=v);
+      d.strikeState.forEach((v,i) => strikeState[i]=v);
+      lockoutUntil = d.lockoutUntil;
+      doneUntil = d.doneUntil;
+      doneActive = d.doneActive||false;
+    } catch(e){}
+  }
+
+  function isLockedOut() {
+    if (!lockoutUntil) return false;
+    if (Date.now() < lockoutUntil) return true;
+    lockoutUntil = null; strikeState.fill(false); save(); return false;
+  }
+
+  function isDone() {
+    if (!doneUntil) return false;
+    if (Date.now() < doneUntil) return true;
+    doneUntil = null; doneActive = false; save(); return false;
+  }
+
+  function isBlocked() { return isLockedOut() || isDone(); }
+
+  function toggle(i) {
+    if (isBlocked()) return;
+    checkState[i] = !checkState[i];
+    render(); save();
+  }
+
+  function flipStrike(i) {
+    if (isDone()) return;
+    strikeState[i] = !strikeState[i];
+    if (strikeState.every(Boolean)) {
+      lockoutUntil = Date.now() + STRIKE_LOCKOUT_MS;
+      checkState.fill(false);
+    }
+    render(); save();
+  }
+
+  function flipDone() {
+    if (isLockedOut() || doneActive || isDone()) return;
+    doneActive = true;
+    const now = new Date();
+    const target = new Date(now);
+    target.setHours(18,0,0,0);
+    if (target <= now) target.setDate(target.getDate()+1);
+    doneUntil = target.getTime();
+    checkState.fill(false);
+    render(); save();
+  }
+
+  function resetChecklist() {
+    checkState.fill(false);
+    render(); save();
+    document.activeElement && document.activeElement.blur();
+  }
+
+  function startHold(e) {
+    if (e) e.preventDefault();
+    holdStart = Date.now();
+    const btn = document.getElementById('masterBtn');
+    const fill = document.getElementById('masterFill');
+    const text = document.getElementById('masterText');
+    btn.classList.add('holding');
+
+    function animate() {
+      const elapsed = Date.now() - holdStart;
+      const pct = Math.min(elapsed / HOLD_MS * 100, 100);
+      fill.style.width = pct + '%';
+      fill.style.transition = 'none';
+      text.textContent = pct < 100 ? 'Hold...' : 'Release';
+      if (pct < 100) holdRaf = requestAnimationFrame(animate);
+      else {
+        holdTimer = setTimeout(() => {
+          checkState.fill(false);
+          strikeState.fill(false);
+          lockoutUntil = null;
+          doneUntil = null;
+          doneActive = false;
+          endHold();
+          render(); save();
+        }, 0);
+      }
+    }
+
+    holdRaf = requestAnimationFrame(animate);
+  }
+
+  function endHold() {
+    if (holdRaf) { cancelAnimationFrame(holdRaf); holdRaf = null; }
+    if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
+    holdStart = null;
+    const btn = document.getElementById('masterBtn');
+    const fill = document.getElementById('masterFill');
+    const text = document.getElementById('masterText');
+    btn.classList.remove('holding');
+    fill.style.width = '0%';
+    text.textContent = 'Hold';
+  }
+
+  function render() {
+    const blocked = isBlocked();
+    const lockedOut = isLockedOut();
+    const done = isDone();
+    const normal = !lockedOut && !done;
+
+    // LEDs
+    document.getElementById('ledNormal').className = 'led' + (normal ? ' active-green' : '');
+    document.getElementById('ledLocked').className = 'led' + (lockedOut ? ' active-red' : '');
+    document.getElementById('ledDone').className = 'led' + ((done||doneActive) ? ' active-amber' : '');
+
+    // Checklist switches
+    document.querySelectorAll('.switch-unit').forEach((u,i) => {
+      u.classList.toggle('active', checkState[i]);
+      u.classList.toggle('disabled', blocked);
+    });
+
+    // Bulb
+    const count = checkState.filter(Boolean).length;
+    const bulb = document.getElementById('bulb');
+    bulb.classList.remove('s1','s2','s3','lit');
+    if (!blocked) {
+      ['','s1','s2','s3','lit'].forEach((c,idx) => { if(idx===count && c) bulb.classList.add(c); });
+    }
+
+    const status = document.getElementById('bulbStatus');
+    const score = document.getElementById('score');
+    if (blocked) {
+      status.textContent = lockedOut ? 'Locked out' : 'Day closed';
+      status.style.color = lockedOut ? 'var(--red)' : 'var(--amber)';
+      score.textContent = '— / 4';
+    } else {
+      const states = [
+        {t:'Stand by',c:'#444'},
+        {t:'Not yet',c:'#c0392b'},
+        {t:'Getting closer',c:'#e67e22'},
+        {t:'Almost there',c:'#7dba5a'},
+        {t:'Trade ready',c:'#2ecc71'},
+      ];
+      status.textContent = states[count].t;
+      status.style.color = states[count].c;
+      score.textContent = count+' / 4';
+    }
+
+    // Strikes
+    strikeState.forEach((v,i) => {
+      document.getElementById('strike'+i).classList.toggle('active', v);
+    });
+
+    // Done
+    const doneUnit = document.getElementById('doneUnit');
+    doneUnit.classList.toggle('active', doneActive||done);
+    doneUnit.classList.toggle('disabled', lockedOut);
+  }
+
+  load();
+  render();
+  setInterval(render, 30000);
+</script>
+</body>
+</html>
