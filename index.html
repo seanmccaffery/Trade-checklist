@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="apple-touch-icon" href="icon.png">
 <link rel="icon" type="image/png" href="icon.png">
 <title>Trade Checklist</title>
@@ -198,13 +201,13 @@
 
   /* ── SECONDARY SECTION ── */
   .secondary {
-    display: flex; gap: 0.6rem; align-items: center;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; align-items: stretch;
   }
 
   /* Strikes */
   .strikes-wrap {
-    flex: 1; display: flex; flex-direction: column;
-    align-items: center; gap: 0.4rem;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 0.4rem;
     background: var(--panel-inner);
     border: 1px solid var(--border-dim);
     border-radius: 7px;
@@ -224,7 +227,7 @@
   .strike-unit.active { opacity: 1; }
 
   .strike-toggle {
-    width: 24px; height: 42px; background: #222;
+    width: 28px; height: 42px; background: #222;
     border-radius: 4px; border: 1px solid #333; position: relative;
     box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
     transition: background 0.2s, border-color 0.2s;
@@ -233,14 +236,14 @@
   .strike-unit.active .strike-toggle { background: var(--red-dark); border-color: var(--red); }
 
   .strike-lever {
-    width: 17px; height: 15px;
+    height: 17px;
     background: linear-gradient(180deg, #555 0%, #333 100%);
-    border-radius: 2px; position: absolute; left: 2px; bottom: 2px;
+    border-radius: 2px; position: absolute; left: 2px; right: 2px; bottom: 2px;
     transition: bottom 0.15s cubic-bezier(0.4,0,0.2,1), background 0.2s;
   }
 
   .strike-unit.active .strike-lever {
-    bottom: 22px;
+    bottom: 20px;
     background: linear-gradient(180deg, #f88 0%, var(--red) 100%);
   }
 
@@ -255,7 +258,7 @@
   .strike-unit.active .strike-label { color: var(--red); }
 
   /* Done for the day */
-  .done-wrap { flex: 1; display: flex; flex-direction: column; gap: 0.4rem; align-items: center; width: 100%; }
+  .done-wrap { display: flex; }
 
   .done-unit {
     display: flex; flex-direction: column; align-items: center; gap: 0.4rem;
@@ -263,7 +266,7 @@
     background: var(--panel-inner); border: 1px solid var(--border-dim);
     border-radius: 7px; padding: 0.5rem 0.8rem;
     transition: border-color 0.2s, opacity 0.3s;
-    width: 100%;
+    flex: 1; justify-content: center;
   }
 
   .done-unit:hover { border-color: #555; }
@@ -274,7 +277,7 @@
   .done-unit.active .done-label { color: var(--amber); }
 
   .done-toggle {
-    width: 28px; height: 50px; background: #2a2a2a;
+    width: 32px; height: 50px; background: #2a2a2a;
     border-radius: 4px; border: 1px solid #3a3a3a; position: relative;
     box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
     transition: background 0.2s, border-color 0.2s;
@@ -283,9 +286,9 @@
   .done-unit.active .done-toggle { background: var(--amber-dark); border-color: var(--amber); }
 
   .done-lever {
-    width: 20px; height: 19px;
+    height: 19px;
     background: linear-gradient(180deg, #777 0%, #555 100%);
-    border-radius: 3px; position: absolute; left: 2px; bottom: 3px;
+    border-radius: 3px; position: absolute; left: 2px; right: 2px; bottom: 3px;
     transition: bottom 0.15s cubic-bezier(0.4,0,0.2,1), background 0.2s;
   }
 
@@ -301,6 +304,22 @@
   }
 
   .done-unit.active .done-dot { background: #ffc; box-shadow: 0 0 5px #ffc; }
+
+  /* ── TOOK A LOSS ── */
+  .loss-btn {
+    width: 100%; height: 38px;
+    background: var(--panel-inner); border: 1px solid var(--border-dim);
+    border-radius: 7px; color: var(--text-muted);
+    font-family: 'Courier New', monospace; font-size: 9px;
+    letter-spacing: 2px; text-transform: uppercase;
+    cursor: pointer; outline: none;
+    display: flex; align-items: center; justify-content: center;
+    appearance: none; -webkit-appearance: none; -webkit-touch-callout: none;
+    transition: border-color 0.2s, color 0.2s, background 0.2s, opacity 0.3s;
+  }
+  .loss-btn:active { background: #1e1414; border-color: var(--red); color: var(--red); }
+  .loss-btn.cooling { background: var(--red-dark); border-color: var(--red); color: var(--red); pointer-events: none; font-variant-numeric: tabular-nums; }
+  .loss-btn.disabled { opacity: 0.25; pointer-events: none; }
 
   /* ── RESET ROW ── */
   .reset-row { display: flex; gap: 0.5rem; align-items: stretch; }
@@ -387,7 +406,7 @@
       <div class="toggle"><div class="toggle-indicator"></div><div class="toggle-lever"></div></div>
     </div>
     <div class="switch-unit" onclick="toggle(3)">
-      <div class="switch-label">Not in<br>recovery mode</div>
+      <div class="switch-label">Entry aligned<br>with PA</div>
       <div class="toggle"><div class="toggle-indicator"></div><div class="toggle-lever"></div></div>
     </div>
   </div>
@@ -443,6 +462,8 @@
     </div>
   </div>
 
+  <button class="loss-btn" id="lossBtn" onclick="tookLoss()"><span id="lossText">Took a loss</span></button>
+
   <hr class="divider">
 
   <!-- RESET ROW -->
@@ -464,18 +485,20 @@
 <script>
   const STRIKE_LOCKOUT_MS = 4 * 60 * 60 * 1000;
   const HOLD_MS = 2000;
+  const COOLDOWN_MS = 15 * 60 * 1000;
 
   const checkState = [false,false,false,false];
   const strikeState = [false,false,false];
   let lockoutUntil = null;
   let doneUntil = null;
   let doneActive = false;
+  let cooldownUntil = null;
   let holdTimer = null;
   let holdStart = null;
   let holdRaf = null;
 
   function save() {
-    try { localStorage.setItem('tc3', JSON.stringify({checkState,strikeState,lockoutUntil,doneUntil,doneActive})); } catch(e){}
+    try { localStorage.setItem('tc3', JSON.stringify({checkState,strikeState,lockoutUntil,doneUntil,doneActive,cooldownUntil})); } catch(e){}
   }
 
   function load() {
@@ -487,6 +510,7 @@
       lockoutUntil = d.lockoutUntil;
       doneUntil = d.doneUntil;
       doneActive = d.doneActive||false;
+      cooldownUntil = d.cooldownUntil||null;
     } catch(e){}
   }
 
@@ -502,7 +526,25 @@
     doneUntil = null; doneActive = false; save(); return false;
   }
 
-  function isBlocked() { return isLockedOut() || isDone(); }
+  function isCooling() {
+    if (!cooldownUntil) return false;
+    if (Date.now() < cooldownUntil) return true;
+    cooldownUntil = null; save(); return false;
+  }
+
+  function fmtMs(ms) {
+    const t = Math.max(0, Math.ceil(ms / 1000));
+    return Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0');
+  }
+
+  function isBlocked() { return isLockedOut() || isDone() || isCooling(); }
+
+  function tookLoss() {
+    if (isBlocked()) return;
+    cooldownUntil = Date.now() + COOLDOWN_MS;
+    checkState.fill(false);
+    render(); save();
+  }
 
   function toggle(i) {
     if (isBlocked()) return;
@@ -560,6 +602,7 @@
           lockoutUntil = null;
           doneUntil = null;
           doneActive = false;
+          cooldownUntil = null;
           endHold();
           render(); save();
         }, 0);
@@ -585,11 +628,12 @@
     const blocked = isBlocked();
     const lockedOut = isLockedOut();
     const done = isDone();
-    const normal = !lockedOut && !done;
+    const cooling = isCooling();
+    const normal = !blocked;
 
     // LEDs
     document.getElementById('ledNormal').className = 'led' + (normal ? ' active-green' : '');
-    document.getElementById('ledLocked').className = 'led' + (lockedOut ? ' active-red' : '');
+    document.getElementById('ledLocked').className = 'led' + ((lockedOut || cooling) ? ' active-red' : '');
     document.getElementById('ledDone').className = 'led' + ((done||doneActive) ? ' active-amber' : '');
 
     // Checklist switches
@@ -609,9 +653,10 @@
     const status = document.getElementById('bulbStatus');
     const score = document.getElementById('score');
     if (blocked) {
-      status.textContent = lockedOut ? 'Locked out' : 'Day closed';
-      status.style.color = lockedOut ? 'var(--red)' : 'var(--amber)';
-      score.textContent = '— / 4';
+      const cd = !lockedOut && !done;
+      status.textContent = lockedOut ? 'Locked out' : done ? 'Day closed' : 'Cooling off';
+      status.style.color = (lockedOut || cd) ? 'var(--red)' : 'var(--amber)';
+      score.textContent = cd ? fmtMs(cooldownUntil - Date.now()) : '— / 4';
     } else {
       const states = [
         {t:'Stand by',c:'#444'},
@@ -630,6 +675,13 @@
       document.getElementById('strike'+i).classList.toggle('active', v);
     });
 
+    // Took a loss
+    const lossBtn = document.getElementById('lossBtn');
+    const coolingNow = cooling && !lockedOut && !done;
+    lossBtn.classList.toggle('cooling', coolingNow);
+    lossBtn.classList.toggle('disabled', lockedOut || done);
+    document.getElementById('lossText').textContent = coolingNow ? fmtMs(cooldownUntil - Date.now()) + ' left' : 'Took a loss';
+
     // Done
     const doneUnit = document.getElementById('doneUnit');
     doneUnit.classList.toggle('active', doneActive||done);
@@ -639,6 +691,7 @@
   load();
   render();
   setInterval(render, 30000);
+  setInterval(() => { if (cooldownUntil) render(); }, 1000);
 </script>
 </body>
 </html>
