@@ -80,18 +80,18 @@
   .led.active-amber .led-dot { background: var(--amber); box-shadow: 0 0 6px var(--amber); }
   .led.active-amber .led-label { color: var(--amber); }
 
-  /* ── CHECKLIST SWITCHES ── */
+  /* ── CHECKLIST SWITCHES (3 columns x 2 rows) ── */
   .switches {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.6rem;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
   }
 
   .switch-unit {
     background: var(--panel-inner);
     border: 1px solid var(--border-dim);
     border-radius: 8px;
-    padding: 0.65rem 0.5rem;
+    padding: 0.65rem 0.25rem;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -106,7 +106,7 @@
   .switch-unit.disabled { opacity: 0.25; pointer-events: none; }
 
   .switch-label {
-    font-size: 9px; letter-spacing: 0.5px;
+    font-size: 9px; letter-spacing: 0.3px;
     text-transform: uppercase; color: var(--text-muted);
     text-align: center; line-height: 1.5;
     transition: color 0.2s;
@@ -406,7 +406,15 @@
       <div class="toggle"><div class="toggle-indicator"></div><div class="toggle-lever"></div></div>
     </div>
     <div class="switch-unit" onclick="toggle(3)">
-      <div class="switch-label">Entry aligned<br>with PA</div>
+      <div class="switch-label">HA aligned<br>2m·15m·1h</div>
+      <div class="toggle"><div class="toggle-indicator"></div><div class="toggle-lever"></div></div>
+    </div>
+    <div class="switch-unit" onclick="toggle(4)">
+      <div class="switch-label">R ≥ 2x<br>stop set</div>
+      <div class="toggle"><div class="toggle-indicator"></div><div class="toggle-lever"></div></div>
+    </div>
+    <div class="switch-unit" onclick="toggle(5)">
+      <div class="switch-label">No news<br>within 15m</div>
       <div class="toggle"><div class="toggle-indicator"></div><div class="toggle-lever"></div></div>
     </div>
   </div>
@@ -428,7 +436,7 @@
     </div>
     <div class="bulb-status-wrap">
       <div class="bulb-status" id="bulbStatus">Stand by</div>
-      <div class="score" id="score">0 / 4</div>
+      <div class="score" id="score">0 / 6</div>
     </div>
   </div>
 
@@ -483,11 +491,12 @@
 </div>
 
 <script>
+  const CHECK_COUNT = 6;
   const STRIKE_LOCKOUT_MS = 4 * 60 * 60 * 1000;
   const HOLD_MS = 2000;
   const COOLDOWN_MS = 15 * 60 * 1000;
 
-  const checkState = [false,false,false,false];
+  const checkState = new Array(CHECK_COUNT).fill(false);
   const strikeState = [false,false,false];
   let lockoutUntil = null;
   let doneUntil = null;
@@ -505,7 +514,10 @@
     try {
       const d = JSON.parse(localStorage.getItem('tc3'));
       if (!d) return;
-      d.checkState.forEach((v,i) => checkState[i]=v);
+      // Only restore switch positions if the saved layout matches (old 4-switch saves are dropped)
+      if (Array.isArray(d.checkState) && d.checkState.length === CHECK_COUNT) {
+        d.checkState.forEach((v,i) => checkState[i]=v);
+      }
       d.strikeState.forEach((v,i) => strikeState[i]=v);
       lockoutUntil = d.lockoutUntil;
       doneUntil = d.doneUntil;
@@ -642,12 +654,13 @@
       u.classList.toggle('disabled', blocked);
     });
 
-    // Bulb
+    // Bulb: 1-2 red, 3-4 orange, 5 light green, 6 full green
     const count = checkState.filter(Boolean).length;
     const bulb = document.getElementById('bulb');
     bulb.classList.remove('s1','s2','s3','lit');
     if (!blocked) {
-      ['','s1','s2','s3','lit'].forEach((c,idx) => { if(idx===count && c) bulb.classList.add(c); });
+      const cls = count === 0 ? '' : count <= 2 ? 's1' : count <= 4 ? 's2' : count === 5 ? 's3' : 'lit';
+      if (cls) bulb.classList.add(cls);
     }
 
     const status = document.getElementById('bulbStatus');
@@ -656,18 +669,20 @@
       const cd = !lockedOut && !done;
       status.textContent = lockedOut ? 'Locked out' : done ? 'Day closed' : 'Cooling off';
       status.style.color = (lockedOut || cd) ? 'var(--red)' : 'var(--amber)';
-      score.textContent = cd ? fmtMs(cooldownUntil - Date.now()) : '— / 4';
+      score.textContent = cd ? fmtMs(cooldownUntil - Date.now()) : '— / ' + CHECK_COUNT;
     } else {
       const states = [
         {t:'Stand by',c:'#444'},
         {t:'Not yet',c:'#c0392b'},
+        {t:'Not yet',c:'#c0392b'},
+        {t:'Getting closer',c:'#e67e22'},
         {t:'Getting closer',c:'#e67e22'},
         {t:'Almost there',c:'#7dba5a'},
         {t:'Trade ready',c:'#2ecc71'},
       ];
       status.textContent = states[count].t;
       status.style.color = states[count].c;
-      score.textContent = count+' / 4';
+      score.textContent = count + ' / ' + CHECK_COUNT;
     }
 
     // Strikes
